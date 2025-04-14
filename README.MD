@@ -6,7 +6,7 @@ A daemon-based I/O provider for Go applications. It uses the inbox pattern to en
 
 ## how to use it?
 ```go 
-	n, e := app.StartDaemon("temp")
-	assert.NoError(t, e)
-	n.Write("/tmp/arash.txt", []byte("test"))
+n, e := app.StartDaemon("temp")
+assert.NoError(t, e)
+n.Write("/tmp/arash.txt", []byte("test"))
 ```
