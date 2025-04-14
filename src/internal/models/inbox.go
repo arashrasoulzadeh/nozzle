@@ -2,7 +2,7 @@ package models
 
 import (
 	"Nozzle/log"
-	"Nozzle/src/io"
+	"Nozzle/src/internal/io"
 	"Nozzle/src/translation"
 	"encoding/base64"
 	"fmt"
