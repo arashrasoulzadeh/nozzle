@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func StartDaemon(path string) (n *Nozzle, err error) {
+func Nozzle(path string) (n *nozzle, err error) {
 
 	statusChannel := make(chan publicModels.StatusChannelEnum)
 
@@ -28,17 +28,7 @@ pendingFiles:
 		break pendingFiles
 	}
 
-	go outbox.Run()
-	go inbox.Run()
-	go fileWatcher.Start()
-
-	n = NewNozzle(inbox, outbox, fileWatcher, statusChannel)
-	go exit(n)
+	n = createNozzle(inbox, outbox, fileWatcher, statusChannel)
 
 	return n, err
-}
-
-func exit(n *Nozzle) {
-	time.Sleep(time.Second * 3)
-	n.StatusChannel <- publicModels.StatusChannelExit
 }

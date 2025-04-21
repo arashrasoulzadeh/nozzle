@@ -7,15 +7,15 @@ import (
 	"github.com/google/uuid"
 )
 
-type Nozzle struct {
+type nozzle struct {
 	StatusChannel chan publicModels.StatusChannelEnum
 	i             *models.Inbox
 	o             *models.Outbox
 	fw            *models.FileWatcher
 }
 
-func NewNozzle(i *models.Inbox, o *models.Outbox, fw *models.FileWatcher, StatusChannel chan publicModels.StatusChannelEnum) *Nozzle {
-	return &Nozzle{
+func createNozzle(i *models.Inbox, o *models.Outbox, fw *models.FileWatcher, StatusChannel chan publicModels.StatusChannelEnum) *nozzle {
+	return &nozzle{
 		i:             i,
 		o:             o,
 		fw:            fw,
@@ -23,7 +23,7 @@ func NewNozzle(i *models.Inbox, o *models.Outbox, fw *models.FileWatcher, Status
 	}
 }
 
-func (n *Nozzle) Write(path string, payload []byte) {
+func (n *nozzle) Write(path string, payload []byte) {
 
 	n.o.Compose(models.OutboxMessage{
 		TempPath: "",
@@ -31,6 +31,15 @@ func (n *Nozzle) Write(path string, payload []byte) {
 		Status:   "test",
 	})
 }
-func (n *Nozzle) Read(path string) ([]byte, error) {
+func (n *nozzle) Read(path string) ([]byte, error) {
 	return io.LoadFromFile(path)
+}
+
+func (n *nozzle) Start() {
+	go n.o.Run()
+	go n.i.Run()
+	go n.fw.Start()
+
+	// keep process running
+	select {}
 }

@@ -8,9 +8,8 @@ import (
 	"github.com/arashrasoulzadeh/nozzle/src/app"
 	publicModels "github.com/arashrasoulzadeh/nozzle/src/app/models"
 	"os"
-	"path/filepath"
-	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -32,27 +31,28 @@ func TestOutbox(t *testing.T) {
 	err := os.MkdirAll(path, os.ModePerm)
 	assert.NoError(t, err)
 
-	f := File{uuid: "Test", path: "/tmp", payload: []byte("Test"), md5: "test"}
+	//f := File{uuid: "Test", path: "/tmp", payload: []byte("Test"), md5: "test"}
 
-	for i := 0; i < 3; i++ {
-		f.path = "/tmp/" + strconv.Itoa(i) + ".txt"
-		filePath := filepath.Join(path, fmt.Sprintf("test_%d.noz", i))
+	//for i := 0; i < 3; i++ {
+	//	f.path = "/tmp/" + strconv.Itoa(i) + ".txt"
+	//	filePath := filepath.Join(path, fmt.Sprintf("test_%d.noz", i))
+	//
+	//	file, err := os.Create(filePath)
+	//	if err != nil {
+	//		fmt.Println("Error creating file:", err)
+	//		return
+	//	}
+	//
+	//	b, err := f.MarshalBinary()
+	//	assert.NoError(t, err)
+	//
+	//	_, err = file.Write(b)
+	//
+	//	file.Close()
+	//}
 
-		file, err := os.Create(filePath)
-		if err != nil {
-			fmt.Println("Error creating file:", err)
-			return
-		}
-
-		b, err := f.MarshalBinary()
-		assert.NoError(t, err)
-
-		_, err = file.Write(b)
-
-		file.Close()
-	}
-
-	n, e := app.StartDaemon("temp")
+	n, e := app.Nozzle("temp")
+	go n.Start()
 	assert.NoError(t, e)
 	n.Write("/tmp/arash.txt", []byte("test"))
 	n.Write("/tmp/arash2.txt", []byte("test"))
@@ -62,6 +62,11 @@ func TestOutbox(t *testing.T) {
 	body, err := n.Read("/tmp/arash.txt")
 	assert.NoError(t, err)
 	assert.Equal(t, []byte("test"), body)
+
+	go func() {
+		time.Sleep(2 * time.Second)
+		n.StatusChannel <- 0
+	}()
 
 loop:
 	for {
