@@ -3,10 +3,10 @@
 package tests
 
 import (
-	"Nozzle/src/app"
-	publicModels "Nozzle/src/app/models"
 	"encoding/base64"
 	"fmt"
+	"github.com/arashrasoulzadeh/nozzle/src/app"
+	publicModels "github.com/arashrasoulzadeh/nozzle/src/app/models"
 	"os"
 	"path/filepath"
 	"strconv"

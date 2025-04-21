@@ -3,10 +3,10 @@
 package io
 
 import (
-	"Nozzle/log"
-	"Nozzle/src/translation"
 	"bufio"
 	"fmt"
+	"github.com/arashrasoulzadeh/nozzle/log"
+	"github.com/arashrasoulzadeh/nozzle/src/translation"
 	"io"
 	"os"
 	"path/filepath"

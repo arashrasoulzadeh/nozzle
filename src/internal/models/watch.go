@@ -3,10 +3,10 @@
 package models
 
 import (
-	"Nozzle/log"
-	publicModels "Nozzle/src/app/models"
-	"Nozzle/src/translation"
 	"fmt"
+	"github.com/arashrasoulzadeh/nozzle/log"
+	publicModels "github.com/arashrasoulzadeh/nozzle/src/app/models"
+	"github.com/arashrasoulzadeh/nozzle/src/translation"
 	"os"
 	"time"
 )

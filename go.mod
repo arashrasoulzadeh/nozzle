@@ -1,4 +1,4 @@
-module Nozzle
+module github.com/arashrasoulzadeh/nozzle
 
 go 1.23
 

@@ -1,11 +1,11 @@
 package models
 
 import (
-	"Nozzle/log"
-	publicModels "Nozzle/src/app/models"
-	"Nozzle/src/internal/io"
-	"Nozzle/src/translation"
 	"encoding/base64"
+	"github.com/arashrasoulzadeh/nozzle/log"
+	publicModels "github.com/arashrasoulzadeh/nozzle/src/app/models"
+	"github.com/arashrasoulzadeh/nozzle/src/internal/io"
+	"github.com/arashrasoulzadeh/nozzle/src/translation"
 	"os"
 	"syscall"
 )

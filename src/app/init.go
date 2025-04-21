@@ -1,10 +1,10 @@
 package app
 
 import (
-	"Nozzle/log"
-	publicModels "Nozzle/src/app/models"
-	"Nozzle/src/internal/models"
-	"Nozzle/src/translation"
+	"github.com/arashrasoulzadeh/nozzle/log"
+	publicModels "github.com/arashrasoulzadeh/nozzle/src/app/models"
+	"github.com/arashrasoulzadeh/nozzle/src/internal/models"
+	"github.com/arashrasoulzadeh/nozzle/src/translation"
 	"time"
 )
 

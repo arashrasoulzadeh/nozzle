@@ -3,8 +3,8 @@
 package log
 
 import (
-	"Nozzle/src/translation"
 	"fmt"
+	"github.com/arashrasoulzadeh/nozzle/src/translation"
 )
 
 func Info(t translation.InfoMessages, fields ...any) {
