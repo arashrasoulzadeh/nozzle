@@ -19,19 +19,21 @@ type OutboxMessage struct {
 }
 
 type Outbox struct {
-	wg            sync.WaitGroup
-	mu            sync.Mutex
-	Q             []OutboxMessage
-	c             chan OutboxMessage
-	StatusChannel chan publicModels.StatusChannelEnum
+	wg              sync.WaitGroup
+	mu              sync.Mutex
+	Q               []OutboxMessage
+	c               chan OutboxMessage
+	StatusChannel   chan publicModels.StatusChannelEnum
+	InternalChannel chan publicModels.StatusChannelEnum
 }
 
-func NewOutbox(statusChannel chan publicModels.StatusChannelEnum) *Outbox {
+func NewOutbox(statusChannel chan publicModels.StatusChannelEnum, internalChannel chan publicModels.StatusChannelEnum) *Outbox {
 	return &Outbox{
-		Q:             make([]OutboxMessage, 0),
-		mu:            sync.Mutex{},
-		c:             make(chan OutboxMessage, 1),
-		StatusChannel: statusChannel,
+		Q:               make([]OutboxMessage, 0),
+		mu:              sync.Mutex{},
+		c:               make(chan OutboxMessage, 1),
+		StatusChannel:   statusChannel,
+		InternalChannel: internalChannel,
 	}
 }
 

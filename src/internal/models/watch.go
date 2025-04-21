@@ -17,7 +17,7 @@ type FileWatcher struct {
 	interval      time.Duration
 	events        chan FileEvent
 	stopChan      chan struct{}
-	sc            chan OutboxMessage
+	SendChannel   chan OutboxMessage
 	statusChannel chan publicModels.StatusChannelEnum
 }
 
@@ -26,14 +26,14 @@ type FileEvent struct {
 	Name string
 }
 
-func NewFileWatcher(statusChannel chan publicModels.StatusChannelEnum, dir string, interval time.Duration, rc chan OutboxMessage) *FileWatcher {
+func NewFileWatcher(sendChannel chan OutboxMessage, statusChannel chan publicModels.StatusChannelEnum, dir string, interval time.Duration) *FileWatcher {
 	return &FileWatcher{
 		dir:           dir,
 		seen:          make(map[string]os.FileInfo),
 		interval:      interval,
 		events:        make(chan FileEvent, 10),
 		stopChan:      make(chan struct{}),
-		sc:            rc,
+		SendChannel:   sendChannel,
 		statusChannel: statusChannel,
 	}
 }
@@ -86,7 +86,7 @@ func (fw *FileWatcher) SendPendingToChannel(path string, statusChannel chan publ
 				TempPath: fw.dir + "/" + entry.Name(),
 			}
 
-			fw.sc <- om
+			fw.SendChannel <- om
 		}
 	}
 	return nil
@@ -129,7 +129,7 @@ func (fw *FileWatcher) scan() {
 				continue
 			}
 
-			fw.sc <- OutboxMessage{
+			fw.SendChannel <- OutboxMessage{
 				File:     file,
 				Status:   "new",
 				TempPath: fw.dir + "/" + entry.Name(),

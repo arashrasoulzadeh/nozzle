@@ -11,15 +11,15 @@ import (
 )
 
 type Inbox struct {
-	File          File
-	Rc            chan OutboxMessage
-	statusChannel chan publicModels.StatusChannelEnum
+	File           File
+	ReceiveChannel chan OutboxMessage
+	statusChannel  chan publicModels.StatusChannelEnum
 }
 
 func NewInbox(statusChannel chan publicModels.StatusChannelEnum) *Inbox {
 	return &Inbox{
-		Rc:            make(chan OutboxMessage, 10),
-		statusChannel: statusChannel,
+		ReceiveChannel: make(chan OutboxMessage, 10),
+		statusChannel:  statusChannel,
 	}
 }
 func (i *Inbox) WriteFile(msg OutboxMessage) error {
@@ -50,7 +50,7 @@ func (i *Inbox) DeleteTemp(msg OutboxMessage) error {
 func (i *Inbox) Run() {
 	for {
 		select {
-		case msg := <-i.Rc:
+		case msg := <-i.ReceiveChannel:
 			file, err := os.OpenFile(msg.TempPath, os.O_CREATE|os.O_RDWR, 0644)
 			if err != nil {
 				log.Error(translation.InfoMessagesCannotOpenFile, err)
