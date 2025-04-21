@@ -15,7 +15,7 @@ func Nozzle(path string) (n *nozzle, err error) {
 	inbox := models.NewInbox(statusChannel)
 	fileWatcher := models.NewFileWatcher(inbox.ReceiveChannel, statusChannel, path, 5*time.Millisecond)
 
-	n = createNozzle(inbox, outbox, fileWatcher, statusChannel)
+	n = createNozzle(inbox, outbox, fileWatcher, statusChannel, path)
 
 	return n, err
 }

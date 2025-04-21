@@ -17,19 +17,20 @@ type nozzle struct {
 	tempPath      string
 }
 
-func createNozzle(i *models.Inbox, o *models.Outbox, fw *models.FileWatcher, StatusChannel chan publicModels.StatusChannelEnum) *nozzle {
+func createNozzle(i *models.Inbox, o *models.Outbox, fw *models.FileWatcher, StatusChannel chan publicModels.StatusChannelEnum, tempPath string) *nozzle {
 	return &nozzle{
 		i:             i,
 		o:             o,
 		fw:            fw,
 		StatusChannel: StatusChannel,
+		tempPath:      tempPath,
 	}
 }
 
 func (n *nozzle) Write(path string, payload []byte) {
 
 	n.o.Compose(models.OutboxMessage{
-		TempPath: "",
+		TempPath: n.tempPath,
 		File:     models.CreateFile(uuid.New().String(), path, payload),
 		Status:   "test",
 	})

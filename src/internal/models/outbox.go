@@ -44,10 +44,10 @@ func (o *Outbox) Run() {
 // Compose appends a message to the Outbox
 func (o *Outbox) Compose(m OutboxMessage) {
 	o.wg.Add(1)
-	go ComposeInBackground(o, m)
+	go ComposeInBackground(m.TempPath, o, m)
 }
 
-func ComposeInBackground(o *Outbox, m OutboxMessage) {
+func ComposeInBackground(tempPath string, o *Outbox, m OutboxMessage) {
 	defer o.wg.Done()
 
 	o.mu.Lock()
@@ -69,7 +69,7 @@ func ComposeInBackground(o *Outbox, m OutboxMessage) {
 	}
 
 	// Save with .noz extension
-	err = io.SaveToFile("./temp/", m.File.uuid+".noz", messageBytes)
+	err = io.SaveToFile(tempPath, m.File.uuid+".noz", messageBytes)
 	if err != nil {
 		log.Error(translation.InfoMessagesCannotSaveTempFile, m.File)
 		return
