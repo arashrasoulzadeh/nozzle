@@ -41,5 +41,7 @@ func (n *nozzle) Start() {
 	go n.fw.Start()
 
 	// keep process running
-	select {}
+	for {
+		select {}
+	}
 }
