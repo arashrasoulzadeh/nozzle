@@ -6,6 +6,7 @@ package models
 
 import (
 	"Nozzle/log"
+	publicModels "Nozzle/src/app/models"
 	"Nozzle/src/internal/io"
 	"Nozzle/src/translation"
 	"sync"
@@ -18,17 +19,19 @@ type OutboxMessage struct {
 }
 
 type Outbox struct {
-	wg sync.WaitGroup
-	mu sync.Mutex
-	Q  []OutboxMessage
-	c  chan OutboxMessage
+	wg            sync.WaitGroup
+	mu            sync.Mutex
+	Q             []OutboxMessage
+	c             chan OutboxMessage
+	StatusChannel chan publicModels.StatusChannelEnum
 }
 
-func NewOutbox(statusChannel chan int) *Outbox {
+func NewOutbox(statusChannel chan publicModels.StatusChannelEnum) *Outbox {
 	return &Outbox{
-		Q:  make([]OutboxMessage, 0),
-		mu: sync.Mutex{},
-		c:  make(chan OutboxMessage, 1),
+		Q:             make([]OutboxMessage, 0),
+		mu:            sync.Mutex{},
+		c:             make(chan OutboxMessage, 1),
+		StatusChannel: statusChannel,
 	}
 }
 
@@ -49,7 +52,7 @@ func ComposeInBackground(o *Outbox, m OutboxMessage) {
 	defer o.mu.Unlock()
 
 	for _, v := range o.Q {
-		if v.File.md5 == m.File.md5 {
+		if v.File.md5 == m.File.md5 && v.File.path == m.File.path {
 			log.Info(translation.InfoMessagesDuplicate, v.File)
 			return
 		}

@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 )
 
 func SaveToFile(dir string, filename string, data []byte) error {
@@ -70,15 +70,15 @@ func LoadFromFile(filename string) ([]byte, error) {
 	return data, nil
 }
 
-func CreateDirsIfNotExists(filePath string) error {
-	dir := path.Dir(filePath)
+func CreateDirsIfNotExists(fp string) error {
+	dir := filepath.Dir(fp)
 
 	err := os.MkdirAll(dir, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("error creating directories: %v", err)
 	}
 
-	_, err = os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, os.ModePerm)
+	_, err = os.OpenFile(fp, os.O_CREATE|os.O_RDWR, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("error creating file: %v", err)
 	}

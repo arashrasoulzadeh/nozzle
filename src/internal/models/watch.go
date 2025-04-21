@@ -4,6 +4,7 @@ package models
 
 import (
 	"Nozzle/log"
+	publicModels "Nozzle/src/app/models"
 	"Nozzle/src/translation"
 	"fmt"
 	"os"
@@ -11,12 +12,13 @@ import (
 )
 
 type FileWatcher struct {
-	dir      string
-	seen     map[string]os.FileInfo
-	interval time.Duration
-	events   chan FileEvent
-	stopChan chan struct{}
-	sc       chan OutboxMessage
+	dir           string
+	seen          map[string]os.FileInfo
+	interval      time.Duration
+	events        chan FileEvent
+	stopChan      chan struct{}
+	sc            chan OutboxMessage
+	statusChannel chan publicModels.StatusChannelEnum
 }
 
 type FileEvent struct {
@@ -24,14 +26,15 @@ type FileEvent struct {
 	Name string
 }
 
-func NewFileWatcher(statusChannel chan int, dir string, interval time.Duration, rc chan OutboxMessage) *FileWatcher {
+func NewFileWatcher(statusChannel chan publicModels.StatusChannelEnum, dir string, interval time.Duration, rc chan OutboxMessage) *FileWatcher {
 	return &FileWatcher{
-		dir:      dir,
-		seen:     make(map[string]os.FileInfo),
-		interval: interval,
-		events:   make(chan FileEvent, 10),
-		stopChan: make(chan struct{}),
-		sc:       rc,
+		dir:           dir,
+		seen:          make(map[string]os.FileInfo),
+		interval:      interval,
+		events:        make(chan FileEvent, 10),
+		stopChan:      make(chan struct{}),
+		sc:            rc,
+		statusChannel: statusChannel,
 	}
 }
 
@@ -55,6 +58,38 @@ func (fw *FileWatcher) Start() {
 
 func (fw *FileWatcher) Stop() {
 	close(fw.stopChan)
+}
+
+func (fw *FileWatcher) SendPendingToChannel(path string, statusChannel chan publicModels.StatusChannelEnum) error {
+	entries, err := os.ReadDir(fw.dir)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		fmt.Println(entry.Name(), entry.IsDir())
+		if !entry.IsDir() {
+			fileContents, err := os.ReadFile(fw.dir + "/" + entry.Name())
+			if err != nil {
+				continue
+			}
+
+			file := CreateFile(entry.Name(), fw.dir+"/"+entry.Name(), fileContents)
+
+			// Unmarshal binary data back into file
+			if err := file.UnmarshalBinary(fileContents); err != nil {
+				log.Error(translation.InfoMessagesCannotDeSerialize, err)
+				continue
+			}
+			om := OutboxMessage{
+				File:     file,
+				Status:   "new",
+				TempPath: fw.dir + "/" + entry.Name(),
+			}
+
+			fw.sc <- om
+		}
+	}
+	return nil
 }
 
 func (fw *FileWatcher) scan() {

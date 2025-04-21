@@ -8,7 +8,7 @@ import (
 )
 
 func Info(t translation.InfoMessages, fields ...any) {
-	fmt.Println("INFO: "+t, fields)
+	//fmt.Println("INFO: "+t, fields)
 }
 func Error(t translation.InfoMessages, fields ...any) {
 	fmt.Println("ERROR: "+t, fields)
