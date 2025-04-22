@@ -55,7 +55,7 @@ func (n *nozzle) Pending() {
 pendingFiles:
 	for {
 		log.Info(translation.InfoMessagesProcessingPendingFiles)
-		err := n.fw.SendPendingToChannel(n.tempPath, n.o.InternalChannel)
+		err := n.fw.SendPendingToChannel()
 		if err != nil {
 			log.Error(translation.InfoMessagesCannotProcessPendingFiles, err)
 			break pendingFiles

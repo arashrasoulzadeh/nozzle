@@ -4,11 +4,13 @@ package models
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/arashrasoulzadeh/nozzle/log"
 	publicModels "github.com/arashrasoulzadeh/nozzle/src/app/models"
 	"github.com/arashrasoulzadeh/nozzle/src/translation"
-	"os"
-	"time"
 )
 
 type FileWatcher struct {
@@ -44,13 +46,14 @@ func (fw *FileWatcher) Events() <-chan FileEvent {
 
 func (fw *FileWatcher) Start() {
 	go func() {
+		ticker := time.NewTicker(fw.interval)
+		defer ticker.Stop()
 		for {
 			select {
 			case <-fw.stopChan:
 				return
-			default:
+			case <-ticker.C:
 				fw.scan()
-				time.Sleep(fw.interval)
 			}
 		}
 	}()
@@ -60,35 +63,36 @@ func (fw *FileWatcher) Stop() {
 	close(fw.stopChan)
 }
 
-func (fw *FileWatcher) SendPendingToChannel(path string, statusChannel chan publicModels.StatusChannelEnum) error {
+func (fw *FileWatcher) SendPendingToChannel() error {
 	entries, err := os.ReadDir(fw.dir)
 	if err != nil {
 		return err
 	}
+
 	for _, entry := range entries {
-		fmt.Println(entry.Name(), entry.IsDir())
-		if !entry.IsDir() {
-			fileContents, err := os.ReadFile(fw.dir + "/" + entry.Name())
-			if err != nil {
-				continue
-			}
+		if entry.IsDir() {
+			continue
+		}
+		fullPath := filepath.Join(fw.dir, entry.Name())
 
-			file := CreateFile(entry.Name(), fw.dir+"/"+entry.Name(), fileContents)
+		fileContents, err := os.ReadFile(fullPath)
+		if err != nil || len(fileContents) == 0 {
+			continue
+		}
 
-			// Unmarshal binary data back into file
-			if err := file.UnmarshalBinary(fileContents); err != nil {
-				log.Error(translation.InfoMessagesCannotDeSerialize, err)
-				continue
-			}
-			om := OutboxMessage{
-				File:     file,
-				Status:   "new",
-				TempPath: fw.dir + "/" + entry.Name(),
-			}
+		file := CreateFile(entry.Name(), fullPath, fileContents)
+		if err := file.UnmarshalBinary(fileContents); err != nil {
+			log.Error(translation.InfoMessagesCannotDeSerialize, err)
+			continue
+		}
 
-			fw.SendChannel <- om
+		fw.SendChannel <- OutboxMessage{
+			File:     file,
+			Status:   "new",
+			TempPath: fullPath,
 		}
 	}
+
 	return nil
 }
 
@@ -97,48 +101,24 @@ func (fw *FileWatcher) scan() {
 
 	entries, err := os.ReadDir(fw.dir)
 	if err != nil {
-		fmt.Println("Error reading directory:", err)
 		log.Error(translation.InfoMessagesCannotWatchDirectory, fw.dir)
-
+		fmt.Println("Error reading directory:", err)
 		return
 	}
 
-	// Detect new and existing files
 	for _, entry := range entries {
 		info, err := entry.Info()
 		if err != nil {
 			continue
 		}
+
 		currentFiles[entry.Name()] = info
 
 		if _, found := fw.seen[entry.Name()]; !found {
-			fw.events <- FileEvent{Type: "create", Name: entry.Name()}
-
-			// Read file contents
-			fileContents, err := os.ReadFile(fw.dir + "/" + entry.Name())
-			if err != nil {
-				continue
-			}
-
-			// Create file object with actual contents
-			file := CreateFile(entry.Name(), fw.dir+"/"+entry.Name(), fileContents)
-
-			// Unmarshal binary data back into file
-			if err := file.UnmarshalBinary(fileContents); err != nil {
-				log.Error(translation.InfoMessagesCannotDeSerialize, err)
-				continue
-			}
-
-			fw.SendChannel <- OutboxMessage{
-				File:     file,
-				Status:   "new",
-				TempPath: fw.dir + "/" + entry.Name(),
-			}
-			log.Info(translation.InfoMessagesFileDetected, entry)
+			fw.handleNewFile(entry.Name())
 		}
 	}
 
-	// Detect deleted files
 	for name := range fw.seen {
 		if _, found := currentFiles[name]; !found {
 			fw.events <- FileEvent{Type: "delete", Name: name}
@@ -146,4 +126,27 @@ func (fw *FileWatcher) scan() {
 	}
 
 	fw.seen = currentFiles
+}
+
+func (fw *FileWatcher) handleNewFile(fileName string) {
+	fullPath := filepath.Join(fw.dir, fileName)
+
+	fileContents, err := os.ReadFile(fullPath)
+	if err != nil || len(fileContents) == 0 {
+		return
+	}
+
+	file := CreateFile(fileName, fullPath, fileContents)
+	if err := file.UnmarshalBinary(fileContents); err != nil {
+		log.Error(translation.InfoMessagesCannotDeSerialize, err)
+		return
+	}
+
+	fw.SendChannel <- OutboxMessage{
+		File:     file,
+		Status:   "new",
+		TempPath: fullPath,
+	}
+	fw.events <- FileEvent{Type: "create", Name: fileName}
+	log.Info(translation.InfoMessagesFileDetected, fileName)
 }
