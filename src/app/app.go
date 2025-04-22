@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type nozzle struct {
+type NozzleStruct struct {
 	StatusChannel chan publicModels.StatusChannelEnum
 	i             *models.Inbox
 	o             *models.Outbox
@@ -17,8 +17,8 @@ type nozzle struct {
 	tempPath      string
 }
 
-func createNozzle(i *models.Inbox, o *models.Outbox, fw *models.FileWatcher, StatusChannel chan publicModels.StatusChannelEnum, tempPath string) *nozzle {
-	return &nozzle{
+func createNozzle(i *models.Inbox, o *models.Outbox, fw *models.FileWatcher, StatusChannel chan publicModels.StatusChannelEnum, tempPath string) *NozzleStruct {
+	return &NozzleStruct{
 		i:             i,
 		o:             o,
 		fw:            fw,
@@ -27,7 +27,7 @@ func createNozzle(i *models.Inbox, o *models.Outbox, fw *models.FileWatcher, Sta
 	}
 }
 
-func (n *nozzle) Write(path string, payload []byte) {
+func (n *NozzleStruct) Write(path string, payload []byte) {
 
 	n.o.Compose(models.OutboxMessage{
 		TempPath: n.tempPath,
@@ -35,11 +35,11 @@ func (n *nozzle) Write(path string, payload []byte) {
 		Status:   "test",
 	})
 }
-func (n *nozzle) Read(path string) ([]byte, error) {
+func (n *NozzleStruct) Read(path string) ([]byte, error) {
 	return io.LoadFromFile(path)
 }
 
-func (n *nozzle) Start() {
+func (n *NozzleStruct) Start() {
 	go n.o.Run()
 	go n.i.Run()
 	go n.fw.Start()
@@ -51,7 +51,7 @@ func (n *nozzle) Start() {
 	}
 }
 
-func (n *nozzle) Pending() {
+func (n *NozzleStruct) Pending() {
 pendingFiles:
 	for {
 		log.Info(translation.InfoMessagesProcessingPendingFiles)

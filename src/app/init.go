@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func Nozzle(path string) (n *nozzle, err error) {
+func Nozzle(path string) (n *NozzleStruct, err error) {
 
 	internalChannel := make(chan publicModels.StatusChannelEnum)
 	statusChannel := make(chan publicModels.StatusChannelEnum)
